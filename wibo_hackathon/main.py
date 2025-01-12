@@ -92,6 +92,38 @@ async def recall(request: Request, background_tasks: BackgroundTasks):
     return "오늘 진행한 회의를 정리 중입니다! 잠시만 기다려주세요."
 
 
+
+@app.post("/wibo/reservation")
+async def reservation(request: Request, background_tasks: BackgroundTasks):
+    # Read the incoming request body
+    try:
+        body = await request.body()
+        if not body:
+            return {"error": "Request body is empty."}
+
+        # Parse x-www-form-urlencoded body
+        body_data = body.decode("utf-8")
+        body_json = dict(pair.split('=') for pair in body_data.split('&'))
+    except Exception as e:
+        print(f"Error parsing request body: {e}")
+        return {"error": "Invalid request body format."}
+
+    # Log the body for debugging
+    print(f"Request body: {body_json}")
+
+    # Pass the same body to the background task
+    headers = {
+        "Content-Type": "application/json"
+    }
+    url = "https://buddy-blush.vercel.app/api/chat"
+
+    background_tasks.add_task(request_slack, body_json, headers, url)
+
+    return "예약을 찾고 있습니다! 잠시만 기다려주세요."
+
+
+
+
 async def request_slack(body, headers, url):
 
     try:
